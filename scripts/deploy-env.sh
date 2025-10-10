@@ -12,8 +12,34 @@ set -euo pipefail  # exit on error
 SOURCE_DIR=$PWD
 HOME_DIR=$HOME/test
 DRY_RUN=false
-VERSION="1.0.0"
+VERSION="1.1.0"
 
+show_help() {
+  cat <<EOF
+Usage: $(basename "$0") [options]
+
+Options
+  -t <dir>    Set target directory (default: \$HOME/dir)
+  -h          Show this help message
+  -v          Show version
+EOF
+}
+
+show_version() {
+  echo "$(basename "$0") version $VERSION"
+}
+
+# Parse options
+while getopts ":t:hv" opt; do
+  case $opt in
+    t) HOME_DIR="$OPTARG" ;;
+    h) show_help; exit 0 ;;
+    v) show_version; exit 0 ;;
+    \?) echo "Invalid option: -$OPTARG" >&2; exit 1 ;;
+    :) echo "Option -$OPTARG requires an argument." >&2; exit 1 ;;
+  esac
+done
+shift $((OPTIND-1))
 
 deploy_dotfiles() {
   # Include hidden files (dotfiles) and ignore patterns that match nothing
