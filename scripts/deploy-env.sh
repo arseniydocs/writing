@@ -10,16 +10,17 @@ set -euo pipefail  # exit on error
 
 # Default values
 SOURCE_DIR=$PWD
-HOME_DIR=$HOME/test
+HOME_DIR=$HOME
 DRY_RUN=false
-VERSION="1.1.0"
+VERSION="1.2.0"
 
 show_help() {
   cat <<EOF
 Usage: $(basename "$0") [options]
 
 Options
-  -t <dir>    Set target directory (default: \$HOME/dir)
+  -t <dir>    Set target directory (default: \$HOME)
+  -d          Dry-run mode (show acctions, don't execute)
   -h          Show this help message
   -v          Show version
 EOF
@@ -30,9 +31,10 @@ show_version() {
 }
 
 # Parse options
-while getopts ":t:hv" opt; do
+while getopts ":t:dhv" opt; do
   case $opt in
     t) HOME_DIR="$OPTARG" ;;
+    d) DRY_RUN=true ;;
     h) show_help; exit 0 ;;
     v) show_version; exit 0 ;;
     \?) echo "Invalid option: -$OPTARG" >&2; exit 1 ;;
@@ -45,10 +47,10 @@ deploy_dotfiles() {
   # Include hidden files (dotfiles) and ignore patterns that match nothing
   shopt -s dotglob nullglob
 
-  # Loop through every file or directory in SOURCE_DIR.
+  # Loop through every file or directory in SOURCE_DIR
   for item in "$SOURCE_DIR"/*; do
 
-    # Extract a file name from the full path to the file.
+    # Extract a file name from the full path to the file
     base=$(basename "$item")
 
     # Build the target path
@@ -63,12 +65,12 @@ deploy_dotfiles() {
     # Backup if file or symlink exists
     if [[ -e "$target" || -L "$target" ]]; then
       timestamp=$(date +'%F_%H-%M-%S')
-      mv "$target" "$target.$timestamp.bak" 
+      [[ $DRY_RUN == false ]] && mv "$target" "$target.$timestamp.bak" 
       echo "Backed up: $target -> $target.$timestamp.bak"
     fi
 
     # Create symlink
-    ln -s "$item" "$target"
+    [[ DRY_RUN == false ]] && ln -s "$item" "$target"
     echo "Symlinked: $item to $target"
 
   done
