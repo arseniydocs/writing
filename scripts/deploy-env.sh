@@ -11,8 +11,9 @@ set -euo pipefail  # exit on error
 # Default values
 SOURCE_DIR=$PWD
 HOME_DIR=$HOME
+# BACKUP_DIR="$HOME_DIR/env-backup-$(date +'%F_%H-%M-%S')"
 DRY_RUN=false
-VERSION="1.2.0"
+VERSION="1.3.0"
 
 show_help() {
   cat <<EOF
@@ -43,6 +44,8 @@ while getopts ":t:dhv" opt; do
 done
 shift $((OPTIND-1))
 
+BACKUP_DIR="$HOME_DIR/env-backup-$(date +'%F_%H-%M-%S')"
+
 deploy_dotfiles() {
   # Include hidden files (dotfiles) and ignore patterns that match nothing
   shopt -s dotglob nullglob
@@ -65,13 +68,17 @@ deploy_dotfiles() {
     # Backup if file or symlink exists
     if [[ -e "$target" || -L "$target" ]]; then
       timestamp=$(date +'%F_%H-%M-%S')
-      [[ $DRY_RUN == false ]] && mv "$target" "$target.$timestamp.bak" 
-      echo "Backed up: $target -> $target.$timestamp.bak"
+      # [[ $DRY_RUN == false ]] && mv "$target" "$BACKUP_DIR/" 
+      if [[ $DRY_RUN == false ]]; then
+        [[ -d "$BACKUP_DIR" ]] || mkdir -p "$BACKUP_DIR"
+        mv "$target" "$BACKUP_DIR/" 
+      fi
+      echo "Backed up: $target -> $BACKUP_DIR/"
     fi
 
     # Create symlink
     [[ DRY_RUN == false ]] && ln -s "$item" "$target"
-    echo "Symlinked: $item to $target"
+    echo "Symlinked: $item -> $target"
 
   done
   shopt -u dotglob nullglob
