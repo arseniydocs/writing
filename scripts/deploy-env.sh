@@ -77,7 +77,7 @@ deploy_dotfiles() {
     fi
 
     # Create symlink
-    [[ DRY_RUN == false ]] && ln -s "$item" "$target"
+    [[ $DRY_RUN == false ]] && ln -s "$item" "$target"
     echo "Symlinked: $item -> $target"
 
   done
